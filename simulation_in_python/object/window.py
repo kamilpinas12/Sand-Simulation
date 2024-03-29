@@ -92,7 +92,7 @@ class Window():
                 angle = -np.rad2deg(np.arctan2(self.acceleration_y, self.acceleration_x)) + 180
 
 
-        #self.sort_elements(angle)
+        self.sort_elements(angle)
                 
 
         for i in range(self.elements.size): 
@@ -330,33 +330,33 @@ class Window():
     def sort_elements(self, angle):
         # na razie z tym działa beznadziejnie
         if angle == 0:
-            point_line_distance = lambda x, y: x
+            point_line_distance = lambda elem: elem.x
         elif angle == 90:
-            point_line_distance = lambda x, y: y
+            point_line_distance = lambda elem: elem.y
         elif angle == 180:
-            point_line_distance = lambda x, y: self.image.shape[1]-x
+            point_line_distance = lambda elem: self.image.shape[1]-elem.x
         elif angle == 270:
-            point_line_distance = lambda x, y: self.image.shape[0]-y
+            point_line_distance = lambda elem: self.image.shape[0]-elem.y
         
         elif 0 < angle < 90:
-            a = np.tan(-angle + 90)
-            point_line_distance = lambda x, y: abs(a*x + y)/np.sqrt(a**2 + 1)
+            a = np.tan(np.deg2rad(-angle + 90))
+            point_line_distance = lambda elem: abs(a*elem.x + elem.y)/np.sqrt(a**2 + 1)
 
         elif 90 < angle < 180:
-            a = np.tan(-angle - 90)
+            a = np.tan(np.deg2rad(-angle - 90))
             c = -a*self.image.shape[1]
-            point_line_distance = lambda x, y: abs(a*x - y + c)/np.sqrt(a**2 + 1)
+            point_line_distance = lambda elem: abs(a*elem.x - elem.y + c)/np.sqrt(a**2 + 1)
 
         elif 180 < angle < 270:
-            a = -np.tan(angle-90)
+            a = -np.tan(np.deg2rad(angle-90))
             c = -self.image.shape[0] - a*(-self.image.shape[1])
-            point_line_distance = lambda x, y: abs(a*x - y - c)/np.sqrt(a**2 + 1)
+            point_line_distance = lambda elem: abs(a*elem.x - elem.y - c)/np.sqrt(a**2 + 1)
 
         elif 270 < angle < 360:
-            a = -np.tan(angle-90)
-            point_line_distance = lambda x, y: abs(a*x - y -self.image.shape[0])/np.sqrt(a**2 + 1)
+            a = -np.tan(np.deg2rad(angle-90))
+            point_line_distance = lambda elem: abs(a*elem.x - elem.y -self.image.shape[0])/np.sqrt(a**2 + 1)
 
-        self.elements = np.array(sorted(self.elements, key=lambda element: point_line_distance(element.x, element.y)))
+        self.elements = np.array(sorted(self.elements, key=point_line_distance))
 
 
 
