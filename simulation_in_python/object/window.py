@@ -320,10 +320,12 @@ class Window():
             return True
         return False
 
+
     def move(self, x: int, y: int, element_idx: int):
         self.image[y, x] = self.image[self.elements[element_idx].y, self.elements[element_idx].x]
         self.image[self.elements[element_idx].y, self.elements[element_idx].x] = None
         self.elements[element_idx].x, self.elements[element_idx].y = x, y
+
 
     def sort_elements(self, angle):
         # na razie z tym działa beznadziejnie
