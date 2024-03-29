@@ -10,7 +10,7 @@ from object.element import Element
 
 
 class Window():
-    def __init__(self, window_size: Tuple, num_elements: int = None, element_size: int = 1):
+    def __init__(self, window_size: Tuple, num_elements: int = None, element_size: int = 1, scattering_factor: float = 0.5):
         if num_elements is None:
             self.num_elements = window_size[0] * window_size[1] // 2
         
@@ -21,6 +21,7 @@ class Window():
             self.num_elements = num_elements
 
         self.element_size = element_size
+        self.scattering_angle = ((1 - scattering_factor) * 45) / 2
 
         # create empty tab
         x = [None for _ in range(window_size[1])]
@@ -28,6 +29,8 @@ class Window():
         self.image = np.array(img)
         self.acceleration_x = -1
         self.acceleration_y = 0
+
+
 
         #add sand to image
         added = 0
@@ -59,7 +62,7 @@ class Window():
                 x, y = self.elements[i].x, self.elements[i].y
                 resize_img[y*self.element_size: self.element_size*(y+1), x*self.element_size:(x+1)*self.element_size] = 255
 
-            rotated_image = resize_img#rotate_image(resize_img, angle+90)
+            rotated_image = rotate_image(resize_img, angle+90)
 
             cv2.imshow('Simulation', rotated_image)
             if keyboard.is_pressed('w'):
@@ -88,6 +91,10 @@ class Window():
             else:
                 angle = -np.rad2deg(np.arctan2(self.acceleration_y, self.acceleration_x)) + 180
 
+        self.sort_elements(angle)
+         
+        # coś jest popsute dla angle = 296 !!!!!!!
+
         for i in range(self.elements.size): 
             x, y = self.elements[i].x, self.elements[i].y
             #random = np.random.randint(2)
@@ -97,105 +104,118 @@ class Window():
                     self.move(x-1, y, i)
                 elif 0 <= angle < 22.5 and self.is_move_possible(x-1, y-1):
                     self.move(x-1, y-1, i)
-                elif angle > 337 and self.is_move_possible(x-1, y+1):
+                elif self.is_move_possible(x-1, y+1):
                     self.move(x-1, y+1, i)
                 # elif angle == 0:
                 #     if self.is_move_possible(x-1, y-1) and random == 1:
                 #         self.move(x-1, y-1, i)
                 #     elif self.is_move_possible(x-1, y+1) and random == 0:
                 #         self.move(x-1, y+1, i)
-                elif 0 <= angle < 22.5 and self.is_move_possible(x, y-1):
+                elif self.scattering_angle <= angle <= 22.5 and self.is_move_possible(x, y-1):
                     self.move(x, y-1, i)
-                elif angle > 330 and self.is_move_possible(x, y+1):
+                elif 337.5 <= angle <= 360 - self.scattering_angle and self.is_move_possible(x, y+1):
                         self.move(x, y+1, i)
-
 
             elif 22.5 < angle <= 67.5:
                 if self.is_move_possible(x-1, y-1):
                     self.move(x-1, y-1, i)
+
                 elif angle >= 45 and self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
-                elif angle < 45 and self.is_move_possible(x-1, y):
+                elif self.is_move_possible(x-1, y):
                     self.move(x-1, y, i)
-                elif angle > 45 and self.is_move_possible(x+1, y-1):
+
+                elif angle > 45 + self.scattering_angle and self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
-                elif angle <= 45 and self.is_move_possible(x-1, y+1):
+                elif angle < 45 - self.scattering_angle and self.is_move_possible(x-1, y+1):
                     self.move(x-1, y+1, i)                 
 
             elif 67.5 < angle <= 112.5:
                 if self.is_move_possible(x, y-1):
                     self.move(x, y-1, i)
+
                 elif angle >= 90 and self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
-                elif angle < 90 and self.is_move_possible(x-1, y-1):
+                elif self.is_move_possible(x-1, y-1):
                     self.move(x-1, y-1, i)
-                elif angle > 90 and self.is_move_possible(x+1, y):
+
+                elif angle > 90 + self.scattering_angle and self.is_move_possible(x+1, y):
                     self.move(x+1, y, i)
-                elif angle <= 90 and self.is_move_possible(x-1, y):
+                elif angle < 90 - self.scattering_angle and self.is_move_possible(x-1, y):
                     self.move(x-1, y, i)
                 
 
             elif 112.5 < angle <= 157.5:
                 if self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
+
                 elif angle >= 135 and self.is_move_possible(x+1, y):
                     self.move(x+1, y, i)
-                elif angle < 135 and self.is_move_possible(x, y-1):
+                elif self.is_move_possible(x, y-1):
                     self.move(x, y-1, i)
-                elif angle > 135 and self.is_move_possible(x+1, y+1):
+
+                elif angle > 135 + self.scattering_angle and self.is_move_possible(x+1, y+1):
                     self.move(x+1, y+1, i)
-                elif angle <= 135 and self.is_move_possible(x-1, y-1):
+                elif angle < 130 - self.scattering_angle and self.is_move_possible(x-1, y-1):
                         self.move(x-1, y-1, i)
 
             elif 157.5 < angle <= 202.5:
                 if self.is_move_possible(x+1, y):
                     self.move(x+1, y, i)
+
                 elif angle >= 180 and self.is_move_possible(x+1, y+1):
                     self.move(x+1, y+1, i)
-                elif angle < 180 and self.is_move_possible(x+1, y-1):
+                elif self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
-                elif angle > 180 and self.is_move_possible(x, y+1):
+
+                elif angle > 180 + self.scattering_angle and self.is_move_possible(x, y+1):
                     self.move(x, y+1, i)
-                elif angle <= 180 and self.is_move_possible(x, y-1):
+                elif angle < 180 - self.scattering_angle and self.is_move_possible(x, y-1):
                     self.move(x, y-1, i)
                 
 
             elif 202.5 < angle <= 247.5:
                 if self.is_move_possible(x+1, y+1):
                     self.move(x+1, y+1, i)
+
                 elif angle >= 225 and self.is_move_possible(x+1, y):
                     self.move(x+1, y, i)
-                elif angle < 225 and self.is_move_possible(x, y+1):
+                elif self.is_move_possible(x, y+1):
                     self.move(x, y+1, i)
-                elif angle > 225 and self.is_move_possible(x-1, y+1):
+
+                elif angle > 225 + self.scattering_angle and self.is_move_possible(x-1, y+1):
                     self.move(x-1, y+1, i)
-                elif angle <= 225 and self.is_move_possible(x+1, y-1):
+                elif angle < 255 - self.scattering_angle and self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
 
 
             elif 247.5 < angle <= 292.5:
                 if self.is_move_possible(x, y+1):
                     self.move(x, y+1, i)
+
                 elif angle >= 270 and self.is_move_possible(x+1, y+1):
                     self.move(x+1, y+1, i)
-                elif angle < 270 and self.is_move_possible(x-1, y+1):
+                elif self.is_move_possible(x-1, y+1):
                     self.move(x-1, y+1, i)
-                elif angle > 270 and self.is_move_possible(x-1, y):
+
+                elif angle > 270 + self.scattering_angle and self.is_move_possible(x-1, y):
                     self.move(x-1, y, i)
-                elif angle <= 270 and self.is_move_possible(x+1, y):
+                elif angle < 270 - self.scattering_angle and self.is_move_possible(x+1, y):
                     self.move(x+1, y, i)
                 
 
             elif 292.5 < angle <= 337.5:
                 if self.is_move_possible(x-1, y+1):
                     self.move(x-1, y+1, i)
-                elif angle >= 315 and self.is_move_possible(x-1, y):
+
+                elif angle > 315 and self.is_move_possible(x-1, y):
                     self.move(x-1, y, i)
-                elif angle < 315 and self.is_move_possible(x, y+1):
+                elif self.is_move_possible(x, y+1):
                     self.move(x, y+1, i)
-                elif angle > 315 and self.is_move_possible(x-1, y-1):
+
+                elif angle > 315 + self.scattering_angle and self.is_move_possible(x-1, y-1):
                     self.move(x-1, y-1, i)
-                elif angle <= 315 and self.is_move_possible(x+1, y-1):
+                elif angle < 315 - self.scattering_angle and self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
                 
 
@@ -214,6 +234,13 @@ class Window():
         self.image[y, x] = self.image[self.elements[element_idx].y, self.elements[element_idx].x]
         self.image[self.elements[element_idx].y, self.elements[element_idx].x] = None
         self.elements[element_idx].x, self.elements[element_idx].y = x, y
+
+    def sort_elements(self, angle):
+        pass
+
+
+
+
 
 
 
