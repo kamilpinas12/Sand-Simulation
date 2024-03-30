@@ -10,7 +10,7 @@ from object.element import Element
 
 
 class Window():
-    def __init__(self, window_size: Tuple, num_elements: int = None, element_size: int = 1, scattering_factor: float = 0.5):
+    def __init__(self, window_size: Tuple, num_elements: int = None, element_size: int = 1, scattering_factor: float = 0.9, hourglass:bool = False):
         if num_elements is None:
             self.num_elements = window_size[0] * window_size[1] // 2
         
@@ -20,6 +20,7 @@ class Window():
         else:
             self.num_elements = num_elements
 
+        self.hourglass =hourglass 
         self.element_size = element_size
         self.scattering_angle = ((1 - scattering_factor) * 45) / 2
 
@@ -30,6 +31,11 @@ class Window():
         self.acceleration_x = -1
         self.acceleration_y = 0
 
+        if hourglass:
+            for i in range((window_size[1]-1)//2):
+                self.image[i: window_size[0]-i, i] = 255
+            for i in range((window_size[0]-1)//2):
+                self.image[i: window_size[0]-i, window_size[1]-i-1] = 255
 
 
         #add sand to image
@@ -39,37 +45,54 @@ class Window():
             for x in range(self.image.shape[1]):
                 if added == self.num_elements:
                     break
+                if self.image[y, x] is not None:
+                    continue
                 new = Element(x, y)
                 elements.append(new)
                 self.image[y, x] = new
                 added += 1
             if added == self.num_elements:
                 break
+        else:
+            raise Exception(f"Not enough space for all elements")
+        
         self.elements = np.array(elements)
 
 
     def simulation_start(self, delay_ms: int):
         cv2.namedWindow('Simulation')
-        angle = 30
+        angle = 90
         np.random.shuffle(self.elements)
         
         while True:
             if keyboard.is_pressed('q'):
                 break
 
-            resize_img = np.zeros((self.image.shape[0]*self.element_size, self.image.shape[1]*self.element_size), dtype=np.uint8)
+            
+
+
+            if self.hourglass:
+                resize_img = np.ones((self.image.shape[0]*self.element_size, self.image.shape[1]*self.element_size), dtype=np.uint8) * 100
+                for i in range(self.image.shape[0]):
+                    for j in range(self.image.shape[1]):
+                        if self.image[i, j] == 255:
+                            resize_img[i*self.element_size: self.element_size*(i+1), j*self.element_size:(j+1)*self.element_size] = 0
+            else:
+                resize_img = np.zeros((self.image.shape[0]*self.element_size, self.image.shape[1]*self.element_size), dtype=np.uint8) 
+
             
             for i in range(self.elements.size):
                 x, y = self.elements[i].x, self.elements[i].y
                 resize_img[y*self.element_size: self.element_size*(y+1), x*self.element_size:(x+1)*self.element_size] = 255
+            
 
             rotated_image = rotate_image(resize_img, angle+90)
 
             cv2.imshow('Simulation', rotated_image)
             if keyboard.is_pressed('w'):
-                angle += 3
+                angle += 1
             if keyboard.is_pressed('s'):
-                angle -= 3
+                angle -= 1
             if angle < 0:
                 angle = 359
             if angle > 359:
@@ -399,7 +422,7 @@ class Window():
 
     def show_img(self):
         img = np.where(self.image, 255, 0).astype(np.uint8)
-        cv2.imshow('Klepsydra', img)
+        cv2.imshow('hourglass', img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
