@@ -50,7 +50,7 @@ class Window():
 
     def simulation_start(self, delay_ms: int):
         cv2.namedWindow('Simulation')
-        angle = 270
+        angle = 180
         
         while True:
             if keyboard.is_pressed('q'):
@@ -92,7 +92,7 @@ class Window():
                 angle = -np.rad2deg(np.arctan2(self.acceleration_y, self.acceleration_x)) + 180
 
 
-        self.sort_elements(angle)
+        #self.sort_elements(angle)
                 
 
         for i in range(self.elements.size): 
@@ -122,7 +122,7 @@ class Window():
                 if self.scattering_angle <= angle <= 22.5 and self.is_move_possible(x, y-1):
                     self.move(x, y-1, i)
                 elif 337.5 <= angle < 360 - self.scattering_angle and self.is_move_possible(x, y+1):
-                        self.move(x, y+1, i)
+                    self.move(x, y+1, i)
 
 
             elif 22.5 < angle <= 67.5:
@@ -131,8 +131,8 @@ class Window():
                     continue
                     
                 elif angle >= 45:
-                    if self.is_move_possible(x+1, y-1):
-                        self.move(x+1, y-1, i)
+                    if self.is_move_possible(x, y-1):
+                        self.move(x, y-1, i)
                         continue
                     if self.is_move_possible(x-1, y):
                         self.move(x-1, y, i) 
@@ -141,8 +141,8 @@ class Window():
                     if self.is_move_possible(x-1, y):
                         self.move(x-1, y, i)
                         continue
-                    if self.is_move_possible(x+1, y-1):
-                        self.move(x+1, y-1, i)
+                    if self.is_move_possible(x, y-1):
+                        self.move(x, y-1, i)
                         continue
                 
                 if angle > 45 + self.scattering_angle and self.is_move_possible(x+1, y-1):
@@ -200,8 +200,8 @@ class Window():
 
                 if angle > 135 + self.scattering_angle and self.is_move_possible(x+1, y+1):
                     self.move(x+1, y+1, i)
-                elif angle < 130 - self.scattering_angle and self.is_move_possible(x-1, y-1):
-                        self.move(x-1, y-1, i)
+                elif angle < 135 - self.scattering_angle and self.is_move_possible(x-1, y-1):
+                    self.move(x-1, y-1, i)
 
 
 
@@ -236,24 +236,24 @@ class Window():
                     self.move(x+1, y+1, i)
                     continue
 
-                elif angle >= 255:
-                    if self.is_move_possible(x+1, y):
-                        self.move(x+1, y, i)
-                        continue
+                elif angle >= 225:
                     if self.is_move_possible(x, y+1):
                         self.move(x, y+1, i)
+                        continue
+                    if self.is_move_possible(x+1, y):
+                        self.move(x+1, y, i)
                         continue
                 else:
-                    if self.is_move_possible(x, y+1):
-                        self.move(x, y+1, i)
-                        continue
                     if self.is_move_possible(x+1, y):
                         self.move(x+1, y, i)
+                        continue
+                    if self.is_move_possible(x, y+1):
+                        self.move(x, y+1, i)
                         continue
         
                 if angle > 225 + self.scattering_angle and self.is_move_possible(x-1, y+1):
                     self.move(x-1, y+1, i)
-                elif angle < 255 - self.scattering_angle and self.is_move_possible(x+1, y-1):
+                elif angle < 225 - self.scattering_angle and self.is_move_possible(x+1, y-1):
                     self.move(x+1, y-1, i)
 
 
@@ -263,18 +263,18 @@ class Window():
                     continue
 
                 elif angle >= 270:
-                    if self.is_move_possible(x+1, y+1):
-                        self.move(x+1, y+1, i)
-                        continue
                     if self.is_move_possible(x-1, y+1):
                         self.move(x-1, y+1, i)
+                        continue
+                    if self.is_move_possible(x+1, y+1):
+                        self.move(x+1, y+1, i)
                         continue
                 else:
-                    if self.is_move_possible(x-1, y+1):
-                        self.move(x-1, y+1, i)
-                        continue
                     if self.is_move_possible(x+1, y+1):
                         self.move(x+1, y+1, i)
+                        continue
+                    if self.is_move_possible(x-1, y+1):
+                        self.move(x-1, y+1, i)
                         continue
 
                 if angle > 270 + self.scattering_angle and self.is_move_possible(x-1, y):
