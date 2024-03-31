@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import keyboard
 
 
-from object.element import Element
+from .element import Element
 
 
 

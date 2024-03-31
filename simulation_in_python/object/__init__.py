@@ -1,2 +1,2 @@
-from object.window import Window
-from object.element import Element
+from .window import Window
+from .element import Element
