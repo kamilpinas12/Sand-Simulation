@@ -67,10 +67,7 @@ class Window():
         while True:
             if keyboard.is_pressed('q'):
                 break
-
             
-
-
             if self.hourglass:
                 resize_img = np.ones((self.image.shape[0]*self.element_size, self.image.shape[1]*self.element_size), dtype=np.uint8) * 100
                 for i in range(self.image.shape[0]):
