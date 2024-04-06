@@ -10,7 +10,7 @@ from .element import Element
 
 
 class Window():
-    def __init__(self, window_size: Tuple, num_elements: int = None, element_size: int = 1, hourglass:bool = False, move_threshold: float = 0.01):
+    def __init__(self, window_size: Tuple, num_elements: int = None, element_size: int = 1, hourglass:bool = False, move_threshold: float = 0.005):
         if num_elements is None:
             self.num_elements = window_size[0] * window_size[1] // 2
         
@@ -85,9 +85,9 @@ class Window():
 
             cv2.imshow('Simulation', rotated_image)
             if keyboard.is_pressed('w'):
-                angle += 5
+                angle += 10
             if keyboard.is_pressed('s'):
-                angle -= 5
+                angle -= 10
             if angle < 0:
                 angle = 359
             if angle > 359:
@@ -107,19 +107,26 @@ class Window():
 
     def update(self, ax: float, ay: float):
         dt = 0.1
-        
-        for i in range(self.elements.size):
-            random = np.random.randint(2)
+        acceleration_threshold = 0.1
+        resistance_factor = 0.75
 
+        for i in range(self.elements.size):
+            # to debug
             elem = self.elements[i]
-            #update speed 
-            self.elements[i].v_x += ax * dt
-            self.elements[i].v_y += ay * dt
+
+            #update speed
+            if abs(ax) > acceleration_threshold:
+                self.elements[i].v_x *= resistance_factor
+                self.elements[i].v_x += ax * dt
+            if abs(ay) > acceleration_threshold:
+                self.elements[i].v_y *= resistance_factor
+                self.elements[i].v_y += ay * dt
 
             moves_x = dt*abs(self.elements[i].v_x) // self.move_threshold
             moves_y = dt*abs(self.elements[i].v_y) // self.move_threshold
-            moves_x_const = moves_x
-            moves_y_const = moves_y
+            const_moves_x = moves_x
+            const_moves_y = moves_y
+
             if moves_x == 0 and moves_y == 0:
                 continue
 
@@ -130,38 +137,43 @@ class Window():
 
                 if self.elements[i].v_y > 0:
                     while moves_x or moves_y:
-                        if random:
-                            if self.is_move_possible(x + 1, y) and moves_x:
-                                x += 1
-                                moves_x -= 1
-                            elif self.is_move_possible(x, y - 1) and moves_y:
-                                y -= 1
-                                moves_y -= 1
-                            else:
-                                break
+                        if self.is_move_possible(x + 1, y - 1) and moves_x and moves_y:
+                            x += 1
+                            y -= 1
+                            moves_x -= 1
+                            moves_y -= 1
+                        elif self.is_move_possible(x + 1, y) and moves_x:
+                            x += 1
+                            moves_x -= 1
+                        elif self.is_move_possible(x, y - 1) and moves_y:
+                            y -= 1
+                            moves_y -= 1
                         else:
-                            if self.is_move_possible(x, y - 1) and moves_y:
-                                y -= 1
-                                moves_y -= 1
-                            elif self.is_move_possible(x + 1, y) and moves_x:
-                                x += 1
-                                moves_x -= 1
-                            else: 
-                                break
+                            break
 
-                    self.elements[i].v_x = self.elements[i].x - (x - self.elements[i].x)*self.move_threshold/dt
-                    self.elements[i].v_y = self.elements[i].y - (y - self.elements[i].y)*self.move_threshold/dt
-                 
+                    if const_moves_x:
+                        self.elements[i].v_x = self.move_threshold * (x - self.elements[i].x) / dt
+                    if const_moves_y:
+                        self.elements[i].v_y = self.move_threshold * -(y - self.elements[i].y) / dt
+                    vx = (moves_x * self.move_threshold) / dt
+                    vy = (moves_y * self.move_threshold) / dt
+                    self.energy_transfer(x + 1, y, vx, 0)
+                    self.energy_transfer(x, y - 1, 0, -vy)
 
-                    
+                
                     if x != self.elements[i].x or y != self.elements[i].y:
                         self.move(x, y, i)
-                    
-                    
+
                 else:
 
                     while moves_x or moves_y:
-                        if self.is_move_possible(x + 1, y) and moves_x:
+                        if self.is_move_possible(x + 1, y + 1) and moves_x and moves_y:
+                            x += 1
+                            y += 1
+                            moves_y -= 1
+                            moves_x -= 1
+
+                        elif self.is_move_possible(x + 1, y) and moves_x:
                             x += 1
                             moves_x -= 1
                         elif self.is_move_possible(x, y + 1) and moves_y:
@@ -170,16 +182,30 @@ class Window():
                         else: 
                             break
 
-                    self.elements[i].v_x = self.elements[i].x - (x - self.elements[i].x)*self.move_threshold/dt
-                    self.elements[i].v_y = self.elements[i].y - (y - self.elements[i].y)*self.move_threshold/dt
+                    if const_moves_x:
+                        self.elements[i].v_x = self.move_threshold * (x - self.elements[i].x) / dt
+                    if const_moves_y:
+                        self.elements[i].v_y = self.move_threshold * -(y - self.elements[i].y) / dt
+                    vx = (moves_x * self.move_threshold) / dt
+                    vy = (moves_y * self.move_threshold) / dt
+                    self.energy_transfer(x + 1, y, vx, 0)
+                    self.energy_transfer(x, y + 1, 0, vy)
+                    
 
                     if x != self.elements[i].x or y != self.elements[i].y:
                         self.move(x, y, i)
             
+
             else:
                 if self.elements[i].v_y > 0:
                     while moves_x or moves_y:
-                        if self.is_move_possible(x - 1, y) and moves_x:
+                        if self.is_move_possible(x - 1, y - 1) and moves_y and moves_x:
+                            x -= 1
+                            y -= 1
+                            moves_x -= 1
+                            moves_y -= 1
+
+                        elif self.is_move_possible(x - 1, y) and moves_x:
                             x -= 1
                             moves_x -= 1
                         elif self.is_move_possible(x, y - 1) and moves_y:
@@ -188,9 +214,14 @@ class Window():
                         else: 
                             break
 
-                    self.elements[i].v_x = self.elements[i].x - (x - self.elements[i].x)*self.move_threshold/dt
-                    self.elements[i].v_y = self.elements[i].y - (y - self.elements[i].y)*self.move_threshold/dt
-                    
+                    if const_moves_x:
+                        self.elements[i].v_x = self.move_threshold * (x - self.elements[i].x) / dt
+                    if const_moves_y:
+                        self.elements[i].v_y = self.move_threshold * -(y - self.elements[i].y) / dt
+                    vx = (moves_x * self.move_threshold) / dt
+                    vy = (moves_y * self.move_threshold) / dt
+                    self.energy_transfer(x - 1, y, -vx, 0)
+                    self.energy_transfer(x, y - 1, 0, -vy)
 
                     if x != self.elements[i].x or y != self.elements[i].y:
                         self.move(x, y, i)
@@ -198,7 +229,13 @@ class Window():
                 else:
 
                     while moves_x or moves_y:
-                        if self.is_move_possible(x - 1, y) and moves_x:
+                        if self.is_move_possible(x - 1, y + 1) and moves_x and moves_y:
+                            x -= 1
+                            y += 1
+                            moves_x -= 1
+                            moves_y -= 1
+
+                        elif self.is_move_possible(x - 1, y) and moves_x:
                             x -= 1
                             moves_x -= 1
                         elif self.is_move_possible(x, y + 1) and moves_y:
@@ -208,13 +245,49 @@ class Window():
                             break
 
 
-                    self.elements[i].v_x = self.elements[i].x - (x - self.elements[i].x)*self.move_threshold/dt
-                    self.elements[i].v_y = self.elements[i].y - (y - self.elements[i].y)*self.move_threshold/dt
-
-
+                    if const_moves_x:
+                        self.elements[i].v_x = self.move_threshold * (x - self.elements[i].x) / dt
+                    if const_moves_y:
+                        self.elements[i].v_y = self.move_threshold * -(y - self.elements[i].y) / dt
+                    vx = (moves_x * self.move_threshold) / dt
+                    vy = (moves_y * self.move_threshold) / dt
+                    self.energy_transfer(x - 1, y, -vx, 0)
+                    self.energy_transfer(x, y + 1, 0, vy)
+                                
                     if x != self.elements[i].x or y != self.elements[i].y:
                         self.move(x, y, i)
                     
+    
+
+    def sort_elemetn(self, ax, ay):
+        if ay > 0:
+            angle = np.rad2deg(np.arctan2(ay, -ax))
+        else:
+            angle = -np.rad2deg(np.arctan2(ay, ax)) + 180 
+
+        # "normalize" vector
+        if ax >= ay:
+            val = int(round(ax/ay, 0))
+        else:
+            val = int(round(ay/ax, 0))
+
+
+
+
+
+
+    def energy_transfer(self, x: int, y: int, vx: float, vy: float):
+        row, col = self.image.shape
+        if not(0 <= x < col):
+            return None
+        if not(0 <= y < row):
+            return None
+        
+        energy_loss_factor = 1
+        if isinstance(self.image[y, x], Element):
+            self.image[y, x].v_x += vx * energy_loss_factor
+            self.image[y, x].v_y += vy * energy_loss_factor
+
 
 
     def is_move_possible(self, x: int, y: int):
